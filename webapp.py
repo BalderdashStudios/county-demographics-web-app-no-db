@@ -16,9 +16,18 @@ def home():
 def render_fact():
     states = get_state_options()
     state = request.args.get('state')
-    county = county_most_under_18(state)
-    fact = "In " + state + ", the county with the highest percentage of under 18 year olds is " + county + "."
-    return render_template('home.html', state_options=states, funFact=fact)
+    
+    countys = get_county_options(state)
+    county = request.args.get('county')
+    
+    
+    
+    
+    county18 = county_most_under_18(state)
+    homeownership = county_most_homeowners(state)
+    fact = "In " + state + ", the county with the highest percentage of under 18 year olds is " + county18 + "."
+    fact2 = "In " + state + ", the county with the most homeownership rate is " + homeownership + "."
+    return render_template('home.html', state_options=states, county_options=countys, funFact=fact, funFact2=fact2)
     
 def get_state_options():
     """Return the html code for the drop down menu.  Each option is a state abbreviation from the demographic data."""
@@ -32,6 +41,19 @@ def get_state_options():
     for s in states:
         options += Markup("<option value=\"" + s + "\">" + s + "</option>") #Use Markup so <, >, " are not escaped lt, gt, etc.
     return options
+    
+def get_county_options(state):
+    """Return the html code for the drop down menu.  Each option is a state abbreviation from the demographic data."""
+    with open('demographics.json') as demographics_data:
+        counties = json.load(demographics_data)
+    countiesList=[]
+    for c in counties:
+        if c["State"] == state:
+            countiesList.append(c["County"])
+    options=""
+    for c in countiesList:
+        options += Markup("<option value=\"" + c + "\">" + c + "</option>") #Use Markup so <, >, " are not escaped lt, gt, etc.
+    return options
 
 def county_most_under_18(state):
     """Return the name of a county in the given state with the highest percent of under 18 year olds."""
@@ -43,6 +65,20 @@ def county_most_under_18(state):
         if c["State"] == state:
             if c["Age"]["Percent Under 18 Years"] > highest:
                 highest = c["Age"]["Percent Under 18 Years"]
+                county = c["County"]
+    return county
+    
+#New code
+def county_most_homeowners(state):
+    """Return the name of a county in the given state with the highest percent of under 18 year olds."""
+    with open('demographics.json') as demographics_data:
+        counties = json.load(demographics_data)
+    highest=0
+    county = ""
+    for c in counties:
+        if c["State"] == state:
+            if c["Housing"]["Homeownership Rate"] > highest:
+                highest = c["Housing"]["Homeownership Rate"]
                 county = c["County"]
     return county
 
