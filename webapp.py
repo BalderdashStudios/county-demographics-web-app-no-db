@@ -29,11 +29,30 @@ def render_fact():
     fact2 = "In " + state + ", the county with the most homeownership rate is " + homeownership + "."
     return render_template('home.html', state_options=states, county_options=countys, funFact=fact, funFact2=fact2)
     
+@app.route('/showCountyFacts')
+def render_county_fact():
+     states = get_state_options()
+     state = request.args.get('state')
+     
+     countys = get_county_options(state)
+     county = request.args.get('county')
+     
+     county18 = county_most_under_18(state)
+     homeownership = county_most_homeowners(state)
+     fact = "In " + str(state) + ", the county with the highest percentage of under 18 year olds is " + str(county18) + "."
+     fact2 = "In " + str(state) + ", the county with the most homeownership rate is " + str(homeownership) + "."
+     higherEdu = percentage_higher_edu(county)
+     
+     
+     countyFact = "The percentage of residents in " + county + " that have a Bachelor's Degree or Higher is: " + str(higherEdu) + "."
+     return render_template('home.html', state_options=states, county_options=countys, funFact=fact, funFact2=fact2, countyFact1 = countyFact)
+     
+  
 def get_state_options():
     """Return the html code for the drop down menu.  Each option is a state abbreviation from the demographic data."""
     with open('demographics.json') as demographics_data:
         counties = json.load(demographics_data)
-    states=[]
+    states=[] 
     for c in counties:
         if c["State"] not in states:
             states.append(c["State"])
@@ -81,6 +100,15 @@ def county_most_homeowners(state):
                 highest = c["Housing"]["Homeownership Rate"]
                 county = c["County"]
     return county
+    
+def percentage_higher_edu(county):
+    with open('demographics.json') as demographics_data:
+        counties = json.load(demographics_data)
+        for edu in counties:
+            if edu["County"] == county:
+                higherEdu = edu["Education"] ["Bachelor's Degree or Higher"]
+    return higherEdu
+        
 
 def is_localhost():
     """ Determines if app is running on localhost or not
